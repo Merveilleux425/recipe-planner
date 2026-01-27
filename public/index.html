@@ -1,0 +1,32 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Planner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Recipe Planner</h1>
+
+    <form id="recipe-form">
+        <h2>Add a New Recipe</h2>
+        <label for="name">Recipe Name:</label>
+        <input type="text" id="name" required>
+
+        <label for="servings">Original Servings:</label>
+        <input type="number" id="servings" required>
+
+        <h3>Ingredients</h3>
+        <div id="ingredients-container">
+            <!-- We will add ingredient inputs here with JavaScript -->
+        </div>
+        <button type="button" id="add-ingredient-btn">+ Add Ingredient</button>
+        <br>
+        <button type="submit">Save Recipe</button>
+    </form>
+
+    <script src="script.js"></script>
+</body>
+</html>
