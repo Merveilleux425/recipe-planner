@@ -1,0 +1,38 @@
+{
+  "recipes": [
+    {
+      "id": 1769814578705,
+      "name": "Pancake",
+      "original_servings": 1,
+      "ingredients": [
+        {
+          "quantity": "200g",
+          "name": "Flour"
+        },
+        {
+          "quantity": "20cl",
+          "name": "Oil"
+        }
+      ]
+    },
+    {
+      "id": 1769814964415,
+      "name": "Bean Cake",
+      "original_servings": 3,
+      "ingredients": [
+        {
+          "quantity": "200",
+          "name": "Bean Cake"
+        },
+        {
+          "quantity": "50",
+          "name": "Pepper"
+        },
+        {
+          "quantity": "3",
+          "name": "Eggs"
+        }
+      ]
+    }
+  ]
+}

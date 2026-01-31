@@ -1,65 +1,102 @@
-// server.js
+// server.js - Using built-in fs module, no external database library
 
 // 1. Import necessary packages
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs').promises; // Use the promise-based version of fs
 const path = require('path');
 
 // 2. Set up the Express app and define the port
 const app = express();
 const port = 3000;
+const dbPath = path.join(__dirname, 'db.json'); // Get the absolute path to our db file
 
-// 3. Connect to the SQLite database (or create it if it doesn't exist)
-const db = new sqlite3.Database('./recipes.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
-    if (err) {
-        return console.error(err.message);
+// 4. Middleware
+app.use(express.json());
+app.use(express.static('public'));
+
+// --- Helper Functions to Read and Write the DB ---
+
+async function getDb() {
+    try {
+        const data = await fs.readFile(dbPath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        // If the file doesn't exist, return a default structure
+        if (error.code === 'ENOENT') {
+            return { recipes: [] };
+        }
+        throw error;
     }
-    console.log('Connected to the recipes database.');
+}
+
+async function saveDb(data) {
+    await fs.writeFile(dbPath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+
+// --- API Endpoints ---
+
+// POST /api/recipes - Create a new recipe
+app.post('/api/recipes', async (req, res) => {
+    try {
+        const db = await getDb();
+        const { name, original_servings, ingredients } = req.body;
+        const newRecipe = { id: Date.now(), name, original_servings, ingredients };
+        db.recipes.push(newRecipe);
+        await saveDb(db);
+        res.status(201).json(newRecipe);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to save recipe' });
+    }
 });
 
-// 4. Middleware: These lines are crucial!
-app.use(express.json()); // This allows your app to understand JSON data
-app.use(express.static('public')); // This serves your frontend files from a 'public' folder
-
-// 5. Create the database tables if they don't exist
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS recipes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        original_servings INTEGER NOT NULL
-    )`);
-
-    db.run(`CREATE TABLE IF NOT EXISTS ingredients (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        recipe_id INTEGER,
-        name TEXT NOT NULL,
-        quantity TEXT NOT NULL,
-        FOREIGN KEY (recipe_id) REFERENCES recipes (id)
-    )`);
-    console.log("Database tables are ready.");
+// GET /api/recipes - Get all recipes
+app.get('/api/recipes', async (req, res) => {
+    try {
+        const db = await getDb();
+        res.json(db.recipes);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch recipes' });
+    }
 });
 
-// 6. Define an API endpoint to CREATE a new recipe
-app.post('/api/recipes', (req, res) => {
-    const { name, original_servings, ingredients } = req.body;
+// GET /api/recipes/:id/scale - Scale a specific recipe
+app.get('/api/recipes/:id/scale', async (req, res) => {
+    try {
+        const db = await getDb();
+        const { id } = req.params;
+        const { servings: newServings } = req.query;
 
-    // First, insert the main recipe
-    db.run('INSERT INTO recipes (name, original_servings) VALUES (?, ?)', [name, original_servings], function(err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
+        const recipe = db.recipes.find(r => r.id == id);
+
+        if (!recipe) {
+            return res.status(404).json({ error: 'Recipe not found' });
         }
 
-        const recipeId = this.lastID; // Get the ID of the recipe we just inserted
-
-        // Then, insert all the ingredients for that recipe
-        const stmt = db.prepare('INSERT INTO ingredients (recipe_id, name, quantity) VALUES (?, ?, ?)');
-        for (const ing of ingredients) {
-            stmt.run(recipeId, ing.name, ing.quantity);
+        if (!newServings || isNaN(newServings)) {
+            return res.status(400).json({ error: 'Please provide a valid number of servings' });
         }
-        stmt.finalize();
 
-        res.status(201).json({ id: recipeId, name, original_servings, ingredients });
-    });
+        const scaleFactor = newServings / recipe.original_servings;
+        const scaledIngredients = recipe.ingredients.map(ing => {
+            const quantityMatch = ing.quantity.match(/^(\d+\.?\d*)/);
+            if (quantityMatch) {
+                const originalQuantity = parseFloat(quantityMatch[0]);
+                const scaledQuantity = (originalQuantity * scaleFactor).toFixed(2);
+                const unit = ing.quantity.substring(quantityMatch[0].length).trim();
+                return { ...ing, quantity: `${scaledQuantity} ${unit}` };
+            }
+            return ing;
+        });
+
+        res.json({
+            ...recipe,
+            scaled_for_servings: parseInt(newServings),
+            ingredients: scaledIngredients
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to scale recipe' });
+    }
 });
 
 // 7. Start the server
