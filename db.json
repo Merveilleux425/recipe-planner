@@ -33,6 +33,63 @@
           "name": "Eggs"
         }
       ]
+    },
+    {
+      "id": 1769948272476,
+      "name": "Pancake Mega",
+      "original_servings": 3,
+      "ingredients": [
+        {
+          "quantity": "200g",
+          "name": "Flour"
+        },
+        {
+          "quantity": "3",
+          "name": "Eggs"
+        },
+        {
+          "quantity": "1",
+          "name": "Baking powder"
+        }
+      ]
+    },
+    {
+      "id": 1769948563502,
+      "name": "Pancake Mega Cake",
+      "original_servings": 2,
+      "ingredients": [
+        {
+          "quantity": "300g",
+          "name": "Flour"
+        },
+        {
+          "quantity": "20cl",
+          "name": "Oil"
+        },
+        {
+          "quantity": "3",
+          "name": "Eggs"
+        }
+      ]
+    },
+    {
+      "id": 1769948831604,
+      "name": "Mega Cake",
+      "original_servings": 2,
+      "ingredients": [
+        {
+          "quantity": "200g",
+          "name": "Flour"
+        },
+        {
+          "quantity": "20cl",
+          "name": "Oil"
+        },
+        {
+          "quantity": "2",
+          "name": "Eggs"
+        }
+      ]
     }
   ]
 }
